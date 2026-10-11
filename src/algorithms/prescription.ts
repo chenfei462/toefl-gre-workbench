@@ -1,0 +1,12 @@
+import type { DailyPrescription, DailyPrescriptionBlock, Exam } from '../types'
+import type { SkillPriority } from './priority'
+
+export function buildDailyPrescription(input: { date: string; availableMinutes: number; priorities: SkillPriority[]; dueErrorCount: number; dueVocabularyCount: number }): DailyPrescription {
+  let remaining = Math.max(0, input.availableMinutes); const blocks: DailyPrescriptionBlock[] = []; const top = input.priorities.slice(0, 4); if (input.dueErrorCount > 0 && remaining >= 10) { const minutes = Math.min(30, Math.max(10, Math.floor(remaining * 0.3))); blocks.push({ id: 'error-review', exam: 'gre', section: 'review', type: 'error_review', minutes, priority: 85, reason: input.dueErrorCount + ' errors due for review' }); remaining -= minutes }
+  top.forEach((priority, index) => { if (remaining < 25) return; const minutes = Math.min(index === 0 ? 60 : 45, remaining); const skill = priority.mastery; blocks.push({ id: `block-${priority.skillId}`, exam: priority.skillId.startsWith('toefl') ? 'toefl' : 'gre' as Exam, section: priority.skillId.includes('quant') || priority.skillId.includes('algebra') || priority.skillId.includes('geometry') ? 'quant' : 'verbal', skillId: priority.skillId, type: index === 0 ? 'practice' : 'timed_practice', minutes, priority: priority.score, reason: `${priority.reasons.join(' · ')} · Mastery ${skill.masteryScore}` }); remaining -= minutes })
+  if (input.dueErrorCount > 0 && remaining >= 20 && !blocks.some(b => b.type === 'error_review')) { const minutes = Math.min(30, remaining); blocks.push({ id: 'error-review', exam: 'gre', section: 'review', type: 'error_review', minutes, priority: 85, reason: `${input.dueErrorCount} errors due for review` }); remaining -= minutes }
+  if (input.dueVocabularyCount > 0 && remaining >= 15) { const minutes = Math.min(25, remaining); blocks.push({ id: 'vocabulary-review', exam: 'gre', section: 'verbal', type: 'vocabulary', minutes, priority: 78, reason: `${input.dueVocabularyCount} vocabulary items due today` }); remaining -= minutes }
+  blocks.sort((a, b) => Number(a.type === 'error_review') - Number(b.type === 'error_review')); return { date: input.date, availableMinutes: input.availableMinutes, blocks, rationale: blocks.length ? [`Allocated ${input.availableMinutes - remaining} of ${input.availableMinutes} minutes to highest-return work.`] : ['No high-confidence blocks available yet; record a diagnostic session to improve recommendations.'], generatedAt: new Date().toISOString() }
+}
+
+

@@ -1,0 +1,291 @@
+[
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about/content.html",
+    "name": "ETS TOEFL Test Content",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-toefl-test-content",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+    "name": "ETS TOEFL TestReady",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-toefl-testready",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+    "name": "ETS TOEFL Free Practice Test",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-toefl-free-practice",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+    "name": "ETS TOEFL Activity of the Day",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "目录入口；具体产品的当前版本与可用性需在 ETS 账号确认，未自动采集题目。",
+    "id": "ets-toefl-activity",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+    "name": "ETS TOEFL Section Test Sampler",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "目录入口；具体产品的当前版本与可用性需在 ETS 账号确认，未自动采集题目。",
+    "id": "ets-toefl-section-test",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+    "name": "ETS TOEFL Section Practice Sampler",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "目录入口；具体产品的当前版本与可用性需在 ETS 账号确认，未自动采集题目。",
+    "id": "ets-toefl-section-practice",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+    "name": "ETS TOEFL Focused Practice",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "目录入口；具体产品的当前版本与可用性需在 ETS 账号确认，未自动采集题目。",
+    "id": "ets-toefl-focused",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about/content.html",
+    "name": "ETS TOEFL Official Overview",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-toefl-overview",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/pdfs/gre/gre-sample-questions.pdf",
+    "name": "ETS GRE Verbal Sample Questions",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "GRE_CURRENT"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-gre-verbal-samples",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/pdfs/gre/gre-sample-questions.pdf",
+    "name": "ETS GRE Quant Sample Questions",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "GRE_CURRENT"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-gre-quant-samples",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/gre/test-takers/general-test/prepare/powerprep.html",
+    "name": "ETS GRE POWERPREP Preview",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "GRE_CURRENT"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-gre-powerprep-preview",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/gre/test-takers/general-test/prepare/powerprep.html",
+    "name": "ETS GRE POWERPREP Online 1",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "GRE_CURRENT"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-gre-powerprep-1",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/gre/test-takers/general-test/prepare/powerprep.html",
+    "name": "ETS GRE POWERPREP Online 2",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "GRE_CURRENT"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-gre-powerprep-2",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://grediagnostic.ets.org/GREDWeb/gred/gre_home.jsp",
+    "name": "ETS GRE Diagnostic Service",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "GRE_CURRENT"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-gre-diagnostic",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "sourceType": "official",
+    "url": "https://www.ets.org/gre/test-takers/general-test/prepare.html",
+    "name": "ETS GRE Math Review",
+    "publisher": "ETS",
+    "verified": true,
+    "examVersions": [
+      "GRE_CURRENT"
+    ],
+    "retrievedAt": "2026-10-11",
+    "sourceTier": "A",
+    "lastVerifiedAt": "2026-10-11",
+    "active": true,
+    "notes": "官方目录已核验；仅保存引用，内容版权与题目版本逐条检查。",
+    "id": "ets-gre-math-review",
+    "rightsStatus": "reference_only"
+  },
+  {
+    "id": "ets-toefl-2026-practice-1",
+    "name": "ETS TOEFL 2026 Practice Test 1",
+    "publisher": "ETS",
+    "sourceType": "official",
+    "sourceTier": "A",
+    "rightsStatus": "reference_only",
+    "url": "https://www.ets.org/content/dam/ets-org/pdfs/toefl/toefl-ibt-full-length-practice-test-1.pdf",
+    "retrievedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-11",
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "verified": true,
+    "active": true,
+    "notes": "封面确认适用于2026-01-21后的考试；纸面改编公开练习，不是近期实考真题。"
+  },
+  {
+    "id": "ets-toefl-2026-practice-2",
+    "name": "ETS TOEFL 2026 Practice Test 2",
+    "publisher": "ETS",
+    "sourceType": "official",
+    "sourceTier": "A",
+    "rightsStatus": "reference_only",
+    "url": "https://www.ets.org/content/dam/ets-org/pdfs/toefl/toefl-ibt-full-length-practice-test-2.pdf",
+    "retrievedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-11",
+    "examVersions": [
+      "TOEFL_2026"
+    ],
+    "verified": true,
+    "active": true,
+    "notes": "封面确认适用于2026-01-21后的考试；纸面改编公开练习，不是近期实考真题。"
+  }
+]
