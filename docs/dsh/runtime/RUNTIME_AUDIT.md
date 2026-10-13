@@ -2,8 +2,8 @@
 
 **2026-10-13 reconciliation:** This report preserves historical runtime findings and the recorded future audit date below. The durable AgentTeams event timestamps place these runtime probes on 2026-10-12; the future heading is not the date of the current follow-through. The user has authorized Codex continuation, whose local acceptance is **CODEX_ACCEPTED** in [CODEX_FOLLOW_THROUGH.md](../../CODEX_FOLLOW_THROUGH.md). The recorded missing credential is not a dependency of that continuation. No successful DeepSeek route is claimed or newly tested here.
 
-**Audit date:** 2026-11-01  
-**Status:** AgentTeams functionality and baseline gates PASS; catalog Model Route Gate BLOCKED on a user-managed credential.  
+**Audit date:** 2026-11-01
+**Status:** AgentTeams functionality and baseline gates PASS; catalog Model Route Gate BLOCKED on a user-managed credential.
 **Workspace:** `D:\systemDir\Desktop\toefl-gre-workbench` (session-configured workspace; PowerShell `Get-Location` probe failed with `spawn EPERM`).
 
 ## Runtime/configuration findings

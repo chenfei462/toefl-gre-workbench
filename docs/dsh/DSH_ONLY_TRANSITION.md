@@ -2,7 +2,7 @@
 
 **2026-10-13 reconciliation:** This document preserves the earlier DSH handoff record, including its recorded future date below. The durable AgentTeams event timestamps place the recorded runtime probes on 2026-10-12. The user has now authorized Codex continuation. Current local acceptance is **CODEX_ACCEPTED**; see [CODEX_FOLLOW_THROUGH.md](../CODEX_FOLLOW_THROUGH.md). The historical catalog-route failure is not a dependency of that continuation, and no working DeepSeek route is claimed.
 
-**Transition date:** 2026-11-01  
+**Transition date:** 2026-11-01
 **Historical handoff status:** AgentTeams functionality and baseline gates PASS; the catalog Model Route Gate remains unproven because the recorded probe failed with `MISSING_CREDENTIAL`.
 
 ## Ownership change
