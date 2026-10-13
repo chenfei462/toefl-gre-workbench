@@ -1,6 +1,7 @@
 import { addDays, format, parseISO } from 'date-fns'
 import type { Attempt, ErrorRecord, ErrorType, Exam, Question, QuestionAnswer, QuestionSource, Section, WorkbenchState } from '../types'
 import { getQuestionEvidenceWeight } from './domain'
+import { updateUserQuestionState } from './userState'
 export interface AttemptInput { date: string; correct?: boolean; selectedAnswer?: QuestionAnswer; timeSeconds?: number; errorType?: ErrorType; note?: string; response?: string; feedback?: string; rubricScore?: number; replaceAttemptId?: string }
 function enrichSkills(ids: string[], errorType?: ErrorType, exam: Exam = 'gre') { return [...new Set([...ids, ...(errorType === 'vocabulary' ? [`${exam}-vocabulary`] : errorType === 'logic' ? [`${exam}-logic`] : [])])] }
 export function recordQuestionAttempt(state: WorkbenchState, question: Question, source: QuestionSource | undefined, input: AttemptInput): WorkbenchState {
@@ -11,7 +12,7 @@ export function recordQuestionAttempt(state: WorkbenchState, question: Question,
   const oldError = existing ? state.errorRecords.find(e => e.attemptId === existing.id) : undefined
   const errors = state.errorRecords.filter(e => e.attemptId !== attempt.id)
   if (correct === false) errors.unshift({ ...makeError(attempt), id: oldError?.id ?? crypto.randomUUID() })
-  return { ...state, attempts: [attempt, ...state.attempts.filter(a => a.id !== attempt.id)], errorRecords: errors }
+  return { ...state, attempts: [attempt, ...state.attempts.filter(a => a.id !== attempt.id)], errorRecords: errors, userQuestionStates: updateUserQuestionState(state.userQuestionStates, { questionId: question.id, date: input.date, correct, }) }
 }
 export function gradeAnswer(q: Question, answer?: QuestionAnswer): boolean | undefined {
   if (!answer || !q.answer || !['official', 'verified'].includes(q.answer.verification) || ['speaking', 'essay'].includes(q.answerType ?? '')) return undefined

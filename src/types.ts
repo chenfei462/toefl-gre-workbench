@@ -211,10 +211,20 @@ export interface Attempt {
   reviewed: boolean
   taskId?: string
   questionId?: string
+  questionReferenceStatus?: 'pending' | 'valid' | 'orphaned'
   sourceReference?: SourceReference
   sessionId?: string
   selectedAnswer?: QuestionAnswer
   constructedResponse?: ConstructedResponseAttempt
+}
+
+export interface UserQuestionState {
+  questionId: string
+  timesSeen: number
+  lastResult?: 'correct' | 'incorrect' | 'ungraded'
+  lastAttemptDate?: string
+  personalDifficulty?: 1 | 2 | 3 | 4 | 5
+  bookmarked: boolean
 }
 
 export interface ErrorRecord {
@@ -337,6 +347,8 @@ export interface WorkbenchState {
   vocabulary: VocabularyItem[]
   prescriptions: DailyPrescription[]
   legacyPracticeEntries: PracticeEntry[]
+  userQuestionStates: UserQuestionState[]
+  migrationWarnings?: string[]
 }
 
 export interface PlanTemplateItem {

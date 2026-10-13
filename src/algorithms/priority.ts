@@ -1,14 +1,16 @@
 import type { Attempt, ErrorRecord, Skill, SkillMastery } from '../types'
+import { isEligibleErrorEvidence, isEligibleLearningEvidence, weightedAccuracy } from './evidence'
+export { RELIABLE_EVIDENCE_WEIGHT, weightedAccuracy } from './evidence'
 
-export interface SkillPriority { skillId: string; score: number; reasons: string[]; mastery: SkillMastery }
-interface PriorityInput { skills: Skill[]; attempts: Attempt[]; errors: ErrorRecord[]; reviewDueSkillIds: string[]; remainingDays: number; targetGaps: Partial<Record<'toefl' | 'gre', number>>; mastery?: SkillMastery[] }
+export interface SkillPriority { skillId: string; score: number; reasons: string[]; mastery: SkillMastery; exam?: Skill['exam']; section?: Skill['section'] }
+export interface PriorityInput { skills: Skill[]; attempts: Attempt[]; errors: ErrorRecord[]; reviewDueSkillIds: string[]; remainingDays: number; targetGaps: Partial<Record<'toefl' | 'gre', number>>; mastery?: SkillMastery[] }
 
-/**
- * Evidence weights at or above this threshold are treated as reliable training
- * evidence. Mirrors the threshold used by `calculateMastery` so that the
- * priority score and the mastery it is derived from cannot disagree.
- */
-export const RELIABLE_EVIDENCE_WEIGHT = 0.65
+export interface PriorityExplanation {
+  skillId: string
+  score: number
+  factors: Array<{ label: string; value: number; reason: string }>
+  summary: string
+}
 
 /** Comfort practice: strong, well-evidenced skills are reduced but never zeroed. */
 export const MAINTENANCE_FLOOR = 8
@@ -19,68 +21,56 @@ export const MAINTENANCE_FLOOR = 8
  */
 export const EVIDENCE_STRENGTH_TARGET = 10
 
-function weightOf(attempt: Attempt): number { return attempt.evidenceWeight ?? 1 }
-
-/**
- * Evidence-weighted accuracy.
- *
- * Reliable evidence (weight >= RELIABLE_EVIDENCE_WEIGHT) sets the base estimate.
- * Low-evidence volume is admitted only in proportion to how much reliable
- * evidence exists, and it may never push the estimate *above* what reliable
- * evidence alone shows.
- *
- * That last rule is the important one. Without it, correct community recalls
- * would silently repair a skill that reliable evidence shows to be weak: 3 wrong
- * official answers would report 0% alone but 20% once padded with 30 correct
- * recalls. Weak evidence is therefore evidence of uncertainty, not evidence of
- * competence — it can only pull the estimate toward the neutral prior, never
- * above the reliable signal.
- */
-export function weightedAccuracy(attempts: Attempt[]): number {
-  const reliable = attempts.filter(a => weightOf(a) >= RELIABLE_EVIDENCE_WEIGHT)
-  const weak = attempts.filter(a => weightOf(a) < RELIABLE_EVIDENCE_WEIGHT)
-  const reliableWeight = reliable.reduce((sum, a) => sum + weightOf(a), 0)
-  const weakWeight = weak.reduce((sum, a) => sum + weightOf(a), 0)
-  if (!reliableWeight && !weakWeight) return 0
-
-  // With no reliable evidence there is nothing to be confident about, so the
-  // estimate sits at the neutral prior; low-evidence volume may move it only
-  // halfway, in either direction.
-  if (!reliableWeight) {
-    const weakCorrect = weak.filter(a => a.correct).reduce((sum, a) => sum + weightOf(a), 0)
-    const weakAccuracy = weakCorrect / weakWeight
-    return Math.round((0.5 + (weakAccuracy - 0.5) * 0.5) * 100)
-  }
-
-  const reliableCorrect = reliable.filter(a => a.correct).reduce((sum, a) => sum + weightOf(a), 0)
-  const reliableAccuracy = reliableCorrect / reliableWeight
-  if (!weakWeight) return Math.round(reliableAccuracy * 100)
-
-  // Low-evidence volume is capped relative to reliable evidence, and the result
-  // is clamped so weak evidence can only pull the estimate down toward the
-  // prior, never up above the reliable signal.
-  const cap = Math.min(1, reliableWeight * 0.25 / weakWeight)
-  const weakCorrect = weak.filter(a => a.correct).reduce((sum, a) => sum + weightOf(a) * cap, 0)
-  const weakTotal = weakWeight * cap
-  const totalWeight = reliableWeight + weakTotal
-  const blended = totalWeight ? (reliableCorrect + weakCorrect) / totalWeight : reliableAccuracy
-  return Math.round(Math.min(reliableAccuracy, blended) * 100)
-}
-
 export function calculateSkillPriority(input: PriorityInput): SkillPriority[] {
   return input.skills.map((skill) => {
-    const attempts = input.attempts.filter((attempt) => attempt.skillIds.includes(skill.id) && !attempt.excludeFromMastery && attempt.evidenceWeight !== 0 && typeof attempt.correct === 'boolean')
+    const attempts = input.attempts.filter((attempt) => attempt.skillIds.includes(skill.id) && isEligibleLearningEvidence(attempt) && typeof attempt.correct === 'boolean')
     // Evidence-weighted accuracy is the single source of truth for both the
     // score and the stated reason, so they can never contradict each other.
     const accuracy = attempts.length ? weightedAccuracy(attempts) / 100 : 0.5
-    const unresolved = input.errors.filter((error) => error.skillIds.includes(skill.id) && error.status !== 'resolved').length
+    const unresolved = input.errors.filter((error) => error.skillIds.includes(skill.id) && error.status !== 'resolved' && isEligibleErrorEvidence(error, input.attempts)).length
     const due = input.reviewDueSkillIds.includes(skill.id)
-    const mastery = input.mastery?.find((item) => item.skillId === skill.id) ?? { skillId: skill.id, attempts: attempts.length, recentAttempts: attempts.length, accuracy: Math.round(accuracy * 100), recentAccuracy: Math.round(accuracy * 100), errorCount: unresolved, unresolvedErrors: unresolved, masteryScore: Math.round(accuracy * 100), confidence: attempts.length < 5 ? 'low' : 'medium' }
-    const weakness = (1 - mastery.recentAccuracy / 100) * 45; const unresolvedScore = Math.min(25, unresolved * 5); const dueScore = due ? 18 : 0; const urgency = input.remainingDays <= 7 ? 10 : input.remainingDays <= 21 ? 6 : 2; const gap = (input.targetGaps[skill.exam] ?? 0) > 0 ? 8 : 0; const comfortPenalty = mastery.masteryScore > 85 && accuracy > 0.9 && !due ? 20 : 0
+    const suppliedMastery = input.mastery?.find((item) => item.skillId === skill.id)
+    // A skill with no attempts has no measured weakness. Keep its priority at
+    // the neutral prior instead of treating the default mastery score (0) as
+    // evidence of a 0% recent accuracy.
+    const recentAccuracy = attempts.length ? suppliedMastery?.recentAccuracy ?? Math.round(accuracy * 100) : 50
+    const mastery = suppliedMastery ?? { skillId: skill.id, attempts: attempts.length, recentAttempts: attempts.length, accuracy: Math.round(accuracy * 100), recentAccuracy, errorCount: unresolved, unresolvedErrors: unresolved, masteryScore: Math.round(accuracy * 100), confidence: attempts.length < 5 ? 'low' : 'medium' }
+    const weakness = (1 - recentAccuracy / 100) * 45; const unresolvedScore = Math.min(25, unresolved * 5); const dueScore = due ? 18 : 0; const urgency = input.remainingDays <= 7 ? 10 : input.remainingDays <= 21 ? 6 : 2; const gap = (input.targetGaps[skill.exam] ?? 0) > 0 ? 8 : 0; const comfortPenalty = mastery.masteryScore > 85 && accuracy > 0.9 && !due ? 20 : 0
     const raw = weakness + unresolvedScore + dueScore + urgency + gap - comfortPenalty
     // A mastered skill is still maintained: the comfort penalty reduces priority
     // but never lets a skill fall to zero and be abandoned entirely.
     const score = comfortPenalty > 0 ? Math.max(MAINTENANCE_FLOOR, Math.min(100, Math.round(raw))) : Math.max(0, Math.min(100, Math.round(raw)))
-    const reasons = attempts.length ? [`Recent accuracy: ${Math.round(accuracy * 100)}%`] : ['No attempt data yet']; if (unresolved) reasons.push(`${unresolved} unresolved errors`); if (due) reasons.push('review due'); if (comfortPenalty) reasons.push('comfort practice reduced, maintenance floor applied'); return { skillId: skill.id, score, reasons, mastery }
+    const reasons = attempts.length ? [`Recent accuracy: ${recentAccuracy}%`] : ['No attempt data yet']; if (unresolved) reasons.push(`${unresolved} unresolved errors`); if (due) reasons.push('review due'); if (comfortPenalty) reasons.push('comfort practice reduced, maintenance floor applied'); return { skillId: skill.id, score, reasons, mastery, exam: skill.exam, section: skill.section }
   }).sort((a, b) => b.score - a.score)
+}
+
+export function explainPriority(input: PriorityInput, skillId: string): PriorityExplanation {
+  const skill = input.skills.find(item => item.id === skillId)
+  if (!skill) throw new Error(`Unknown skill: ${skillId}`)
+  const attempts = input.attempts.filter(a => a.skillIds.includes(skillId) && isEligibleLearningEvidence(a) && typeof a.correct === 'boolean')
+  const accuracy = attempts.length ? weightedAccuracy(attempts) : 50
+  const unresolved = input.errors.filter(e => e.skillIds.includes(skillId) && e.status !== 'resolved' && isEligibleErrorEvidence(e, input.attempts)).length
+  const due = input.reviewDueSkillIds.includes(skillId)
+  const mastery = input.mastery?.find(item => item.skillId === skillId)
+  const recentAccuracy = attempts.length ? mastery?.recentAccuracy ?? accuracy : 50
+  const weakness = (1 - recentAccuracy / 100) * 45
+  const unresolvedScore = Math.min(25, unresolved * 5)
+  const dueScore = due ? 18 : 0
+  const urgency = input.remainingDays <= 7 ? 10 : input.remainingDays <= 21 ? 6 : 2
+  const gap = (input.targetGaps[skill.exam] ?? 0) > 0 ? 8 : 0
+  const comfort = (mastery?.masteryScore ?? accuracy) > 85 && accuracy > 90 && !due ? -20 : 0
+  const raw = Math.round(weakness + unresolvedScore + dueScore + urgency + gap + comfort)
+  const score = comfort < 0
+    ? Math.max(MAINTENANCE_FLOOR, Math.min(100, raw))
+    : Math.max(0, Math.min(100, raw))
+  const factors = [
+    // Factor display is rounded; the score above uses the unrounded total, like calculateSkillPriority.
+    { label: 'accuracy', value: Math.round(weakness), reason: `Evidence-weighted recent accuracy ${recentAccuracy}%` },
+    { label: 'unresolved errors', value: unresolvedScore, reason: `${unresolved} unresolved errors` },
+    { label: 'review due', value: dueScore, reason: due ? 'Review is due' : 'No review due' },
+    { label: 'exam urgency', value: urgency, reason: `${input.remainingDays} days remaining` },
+    { label: 'score gap', value: gap, reason: gap ? 'Target gap exists' : 'No target gap' },
+    { label: 'comfort penalty', value: comfort, reason: comfort ? 'Strong evidence reduces comfort practice' : 'No comfort penalty' },
+  ].filter(f => f.value !== 0 || f.label === 'accuracy')
+  return { skillId, score, factors, summary: `${skill.name}: priority ${score} because ${factors.map(f => f.reason.toLowerCase()).join('; ')}.` }
 }

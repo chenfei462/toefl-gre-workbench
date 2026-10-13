@@ -27,7 +27,7 @@ export function validateQuestionImport(records: QuestionImportRecord[], sources:
     if (q.compatibility.status === 'current' && !isCurrentFormat(q)) q.compatibility = { ...q.compatibility, status: 'legacy', reason: '版本或题型不属于当前格式' }
     if (q.compatibility.status === 'legacy') warnings.push(issue(index, 'legacy_question', '旧版题目仅作为技能训练资料'))
     if (q.storageMode === 'reference_only') warnings.push(issue(index, 'reference_only', '仅保存来源定位，需在原平台查看题目'))
-    if (q.storageMode === 'full' && source && !['licensed', 'public', 'user_owned'].includes(source.rightsStatus)) { invalid.push(issue(index, 'rights_unknown', '此来源仅允许引用；请改为 reference_only', 'error')); return }
+    if (q.storageMode === 'full' && (!source || !['licensed', 'public', 'user_owned'].includes(source.rightsStatus))) { invalid.push(issue(index, 'rights_unknown', '完整题目需要已注册且允许保存全文的来源；请改为 reference_only', 'error')); return }
     if (q.answer?.verification === 'official' && !isOfficialSource(source)) { invalid.push(issue(index, 'false_official', '非 ETS 来源不能标记 ETS 官方答案', 'error')); return }
     valid.push(q)
   })

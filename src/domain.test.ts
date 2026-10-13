@@ -41,7 +41,7 @@ describe('study domain', () => {
       resources: [],
       practiceEntries: [{ id: 'p1', date: '2026-10-11', exam: 'toefl', section: 'reading', correct: 8, total: 10, durationMinutes: 30, errorTags: [] }],
       weeklyReviews: [],
-      examProfiles: { toefl: { exam: 'toefl', targetScore: 5.5 }, gre: { exam: 'gre', targetScore: 330 } }, skills: [], attempts: [], errorRecords: [], reviewAttempts: [], mastery: [], checkpoints: [], vocabulary: [], prescriptions: [], legacyPracticeEntries: [],
+      examProfiles: { toefl: { exam: 'toefl', targetScore: 5.5 }, gre: { exam: 'gre', targetScore: 330 } }, skills: [], attempts: [], errorRecords: [], reviewAttempts: [], mastery: [], checkpoints: [], vocabulary: [], prescriptions: [], legacyPracticeEntries: [], userQuestionStates: [],
     }
 
     const progress = calculateProgress(state)

@@ -21,4 +21,27 @@ describe('CSV and JSON ingestion', () => {
     expect(bundle.explanations).toHaveLength(1)
     expect(bundle.sources).toHaveLength(0)
   })
+
+  it('rejects full text from an unregistered source even when it is not labelled official', () => {
+    const preview = previewQuestionImport([{
+      sourceId: 'unknown-source', exam: 'gre', examVersion: 'GRE_CURRENT', section: 'verbal',
+      questionType: 'text_completion', prompt: 'A privately supplied question', storageMode: 'full',
+      verification: 'unverified', compatibility: { examVersion: 'GRE_CURRENT', status: 'current' },
+    }], defaultSources)
+
+    expect(preview.valid).toHaveLength(0)
+    expect(preview.invalid).toEqual([expect.objectContaining({ code: 'rights_unknown', severity: 'error' })])
+  })
+
+  it('allows an unregistered source to store a standalone reference', () => {
+    const preview = previewQuestionImport([{
+      sourceId: 'unknown-source', sourceQuestionId: '7', exam: 'gre', examVersion: 'GRE_CURRENT', section: 'verbal',
+      questionType: 'text_completion', storageMode: 'reference_only', verification: 'unverified',
+      compatibility: { examVersion: 'GRE_CURRENT', status: 'current' },
+    }], defaultSources)
+
+    expect(preview.valid).toHaveLength(1)
+    expect(preview.invalid).toHaveLength(0)
+    expect(preview.warnings.some(issue => issue.code === 'unknown_source')).toBe(true)
+  })
 })

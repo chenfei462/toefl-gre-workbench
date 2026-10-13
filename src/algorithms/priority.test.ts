@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { calculateSkillPriority, weightedAccuracy, MAINTENANCE_FLOOR } from './priority'
+import { calculateSkillPriority, explainPriority, weightedAccuracy, MAINTENANCE_FLOOR } from './priority'
+import { calculateMastery } from './mastery'
 import type { Attempt, ErrorRecord, Skill } from '../types'
 
 const skill = (id: string, exam: 'gre' | 'toefl' = 'gre'): Skill => ({ id, exam, section: exam === 'gre' ? 'verbal' : 'reading', name: id, priorityWeight: 1 })
@@ -37,6 +38,43 @@ describe('weightedAccuracy', () => {
 })
 
 describe('calculateSkillPriority evidence weighting (gap G-5)', () => {
+  it('uses the same weighted evidence for mastery and production priority', () => {
+    const s = skill('gre-padded')
+    const attempts = [
+      ...Array.from({ length: 30 }, (_, i) => attempt({ id: `recall-${i}`, skillIds: [s.id], correct: true, evidenceWeight: 0.3 })),
+      ...Array.from({ length: 3 }, (_, i) => attempt({ id: `official-${i}`, skillIds: [s.id], correct: false, evidenceWeight: 1 })),
+    ]
+    const mastery = calculateMastery(s, attempts, [], [])
+    const input = { skills: [s], attempts, errors: [], reviewDueSkillIds: [], remainingDays: 30, targetGaps: {}, mastery: [mastery] }
+    const [entry] = calculateSkillPriority(input)
+    const explanation = explainPriority(input, s.id)
+
+    expect(mastery.accuracy).toBe(0)
+    expect(mastery.recentAccuracy).toBe(0)
+    expect(entry.reasons[0]).toBe('Recent accuracy: 0%')
+    expect(entry.score).toBe(47)
+    expect(explanation.score).toBe(entry.score)
+    expect(explanation.factors.find(factor => factor.label === 'accuracy')?.value).toBe(45)
+  })
+
+  it('prints the recent accuracy used by weakness when lifetime accuracy differs', () => {
+    const s = skill('gre-tc')
+    const attempts = [
+      ...Array.from({ length: 10 }, (_, i) => attempt({ id: `recent-${i}`, skillIds: [s.id], date: '2026-01-02', correct: false, evidenceWeight: 1 })),
+      ...Array.from({ length: 20 }, (_, i) => attempt({ id: `older-${i}`, skillIds: [s.id], date: '2026-01-01', correct: true, evidenceWeight: 1 })),
+    ]
+    const mastery = calculateMastery(s, attempts, [], [])
+    const input = { skills: [s], attempts, errors: [], reviewDueSkillIds: [], remainingDays: 30, targetGaps: {}, mastery: [mastery] }
+    const [entry] = calculateSkillPriority(input)
+    const explanation = explainPriority(input, s.id)
+
+    expect(mastery.accuracy).toBe(67)
+    expect(mastery.recentAccuracy).toBe(0)
+    expect(entry.reasons[0]).toBe('Recent accuracy: 0%')
+    expect(explanation.factors.find(factor => factor.label === 'accuracy')?.reason).toContain('recent accuracy 0%')
+    expect(explanation.score).toBe(entry.score)
+  })
+
   it('does not let low-evidence volume mask a genuine weakness in the ranking', () => {
     // "padded": many community-source correct answers hiding 3 reliable wrong ones.
     const padded = skill('gre-padded')

@@ -13,6 +13,7 @@ describe('question learning loop', () => {
     const next = recordQuestionAttempt(state(), q, source, { date: '2026-10-11', correct: false, selectedAnswer: { text: 'D', verification: 'unverified' }, errorType: 'vocabulary', timeSeconds: 94 })
     const restored = storage.import(storage.export(next))
     expect(restored.attempts[0]).toMatchObject({ questionId: 'q', sourceReference: { sourceId: 'pp', sourceQuestionId: '7' }, selectedAnswer: { text: 'D' } })
+    expect(restored.userQuestionStates).toEqual([{ questionId: 'q', timesSeen: 1, lastResult: 'incorrect', lastAttemptDate: '2026-10-11', bookmarked: false }])
     expect(restored.errorRecords).toHaveLength(1)
   })
   it('records 20 attempts, ten errors, then eight successful and two failed retries', () => {
