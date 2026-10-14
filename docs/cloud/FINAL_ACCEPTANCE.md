@@ -1,8 +1,8 @@
 # Cloud acceptance — 2026-10-14
 
-**Status: CLOUD_REJECTED — actual GitHub Actions result remains pending.**
+**Status: CLOUD_ACCEPTED. Real seven-day learner pilot remains NOT_STARTED.**
 
-The original controller is preserved in [USER_REQUIREMENTS.md](USER_REQUIREMENTS.md). Local and hosted application gates below have passed; production acceptance and seven actual days of study are not yet claimed.
+The original controller is preserved in [USER_REQUIREMENTS.md](USER_REQUIREMENTS.md). Local, hosted, actual GitHub Actions and Production application gates have passed. Automated acceptance is not seven actual learner days.
 
 | Gate | Fresh evidence | Result |
 | --- | --- | --- |
@@ -16,8 +16,8 @@ The original controller is preserved in [USER_REQUIREMENTS.md](USER_REQUIREMENTS
 | Independent review | [Safety review](INDEPENDENT_REVIEW.md), [pending-save review](PENDING_SAVE_REVIEW.md) | No unresolved reviewed P0/P1 |
 | Latest hosted browser | Two passes, 1.1 min, on exact Preview below | PASS |
 | Git diff whitespace | Fresh exact tree check | PASS |
-| GitHub Actions | Connected chenfei462 account confirmed write permission; branch/run evidence pending | OPEN |
-| Production | Public configuration prepared; no accepted production deployment | OPEN |
+| GitHub Actions | [Actual successful run](https://github.com/chenfei462/toefl-gre-workbench/actions/runs/38541864819), both verify/cloud jobs; code SHA 96108fc33c3ff99d7239a8ae1819ef32d9400455 | PASS |
+| Production | dpl_HqAkWBKTsikCBgw1N1xkk9KfgACa; READY, exact CI code SHA; two full staged browser cases and both complete canonical-domain cases passed, 1.2 min | PASS |
 | Real seven-day pilot | [PILOT_LOG.md](PILOT_LOG.md), actual learner rows still empty | OPEN |
 
 ## Exact hosted target
@@ -25,7 +25,11 @@ The original controller is preserved in [USER_REQUIREMENTS.md](USER_REQUIREMENTS
 Vercel Hobby project `prj_wYsMcfoSI6Du1eZJ8N6uksRaB4fH`, team `hahayulu`. Latest verified Preview:
 [Open Preview](https://toefl-gre-workbench-l4yf6lnhk-hahayulu.vercel.app), deployment `dpl_48nmVndhFjhbWbxKpYk9Nkd9D2Yc`, READY / Preview. Authentication protection remains enabled. Two unintended bootstrap Production deployments were removed; their first-deployment behavior is recorded in [deployment notes](VERCEL_DEPLOYMENT.md).
 
-Supabase Free project `vcfpdxpprugrgmmilahm`, Tokyo `ap-northeast-1`, organization `qbiwuksbgkgymwoytidr`. Empty inventory was inspected before applying exact migration files 1–3; history versions match the repository. Snapshot RLS is enabled and both buckets are private. Email confirmation remains required. Site URL and redirects now include the latest Preview and the proposed stable app URL.
+Supabase Free project `vcfpdxpprugrgmmilahm`, Tokyo `ap-northeast-1`, organization `qbiwuksbgkgymwoytidr`. Empty inventory was inspected before applying exact migration files 1–3; history versions match the repository. Snapshot RLS is enabled and both buckets are private. Email confirmation remains required. Site URL is the stable Production URL; redirects include that origin and the latest Preview. Hosted browser accounts were administratively confirmed test fixtures; actual learner confirmation-mail delivery was not exercised.
+
+Production: [toefl-gre-workbench.vercel.app](https://toefl-gre-workbench.vercel.app), deployment `dpl_HqAkWBKTsikCBgw1N1xkk9KfgACa`, created 18:28 JST. The staged Production build carried clean code SHA `96108fc33c3ff99d7239a8ae1819ef32d9400455`. It passed both hosted cases (1.2 min), then was promoted; alias inspection maps the canonical domain to that exact deployment. Anonymous canonical HTTP200, mobile/offline and full canonical cloud/restore/conflict cases passed. Preview authentication protection remains enabled. Transient fixture-login connectivity failures were checked against service reachability/CORS, hosted security and successful complete reruns rather than removing assertions.
+
+Publishing used the connected chenfei462 account. The remote code tree `7c05f6a1a8319265c6b0be2c9b41978d0fe089d0` exactly matched the tested local commit `253b7b1061ee396922b4980b99265dbdcf290481`. Original local Study OS history remains on `codex/study-os-integration`; the published development branch is `codex/cloud-release`, [draft PR #1](https://github.com/chenfei462/toefl-gre-workbench/pull/1). Main was not rewritten or merged.
 
 ## Browser evidence and limits
 
@@ -41,10 +45,10 @@ Checksum, malformed schemas/dates, duplicate IDs, account-switch request identit
 
 Intentional SQLSTATE40001 caused hosted PostgREST to retry a losing CAS indefinitely. The additive third migration uses PT409 in both guard and RPC, preserving ownership, signatures and CAS. Original migrations 1–2 remain unchanged. Bounded local and hosted security races passed after the repair. [Official Supabase guidance](https://supabase.com/docs/guides/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions-77326b).
 
-## Release records still to fill
+## Remaining actual-use requirement
 
-- Exact published implementation SHA and successful Actions run URL.
-- Accepted Production deployment and final public smoke.
-- Seven actual dated learner sessions; feedback collection is implemented and algorithm weights remain unchanged.
+Seven actual dated learner sessions remain unfilled in [PILOT_LOG.md](PILOT_LOG.md). Feedback collection is implemented and algorithm weights remain unchanged. The bundle-size warning remains a non-blocking P2; full binary ZIP backup is optional and not implemented.
 
 A database password briefly entered tool output during inspection. It was rotated on the actual hosted project and only the ignored local secret file was updated. No credential is included in source, Git, browser configuration or shared traces.
+
+A later Playwright failure context included a disposable test-account password. Both isolated fixture passwords were rotated on the hosted Auth service, and the hosted test now clears the password UI immediately after submission before an assertion can generate a failure snapshot. Final documentation and fixture snapshot hygiene are a separate follow-up to the verified application commit; they do not alter the deployed application code. Both canonical-domain hosted tests passed after this test change.

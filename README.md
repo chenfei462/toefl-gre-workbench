@@ -4,6 +4,8 @@
 
 支持练习计时、口语录音与自评、FSRS 词汇、陷阱分析、个人材料、学习历史及最后一周训练。邮箱账号可提供云快照、跨设备恢复和私有文件备份。
 
+正式地址：[toefl-gre-workbench.vercel.app](https://toefl-gre-workbench.vercel.app)。云端技术验收已通过；[真实 CI](https://github.com/chenfei462/toefl-gre-workbench/actions/runs/38541864819) 与 [验收记录](docs/cloud/FINAL_ACCEPTANCE.md) 保存证据和验证范围。七天真实学习仍需实际使用并记录。
+
 ## 启动与检查
 
 使用 Node.js 22.12+ 或兼容更新版本：

@@ -11,6 +11,8 @@ async function login(page: Page) {
   await page.getByLabel('邮箱', { exact: true }).fill(account.email)
   await page.getByLabel('密码', { exact: true }).fill(account.password)
   await page.getByRole('button', { name: '登录', exact: true }).click()
+  // Clear the UI immediately so a failure snapshot cannot contain a fixture password.
+  await page.getByLabel('密码', { exact: true }).fill('')
   await expect(page.getByText('已登录：' + account.email, { exact: true })).toBeVisible()
 }
 

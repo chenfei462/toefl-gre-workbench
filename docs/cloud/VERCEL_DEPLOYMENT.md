@@ -1,5 +1,7 @@
 # Vercel deployment
 
+Accepted Production: https://toefl-gre-workbench.vercel.app, deployment `dpl_HqAkWBKTsikCBgw1N1xkk9KfgACa`, clean successful CI code SHA `96108fc33c3ff99d7239a8ae1819ef32d9400455`. The staged Production build passed both full hosted cases before promotion; canonical public-domain cases passed afterward. Preview dpl_48nmVndhFjhbWbxKpYk9Nkd9D2Yc remains protected. Hosted Auth site URL is the stable Production origin, with Production and latest Preview in redirects. See [FINAL_ACCEPTANCE.md](FINAL_ACCEPTANCE.md) for exact evidence and the unperformed real seven-day pilot.
+
 The app remains Vite + React. `vercel.json` specifies framework `vite`, build `npm run build`, output `dist` and a catch-all `/index.html` rewrite for BrowserRouter deep links. CI uses Node 22. See [Vercel's Vite SPA guidance](https://vercel.com/docs/frameworks/frontend/vite#using-vite-to-make-spas).
 
 ## Confirmed target and environment

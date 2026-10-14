@@ -50,4 +50,6 @@ The feedback schema, Today form and manual JSON backup roundtrip are tested. Onl
 
 On 2026-10-14 a terminal inspection accidentally exposed the database password from an ignored local credential file in the session output. The actual hosted server password was rotated immediately at 17:34 JST and the ignored local value updated. No credential value is retained in this document, and no credential was committed to Git. For a future incident, stop printing the affected file, rotate the actual server credential and privately update dependent local configuration; editing a local file alone does not revoke the old password.
 
+A failed Playwright login assertion later included a disposable fixture password in its generated page context. Both acceptance-only Auth account passwords were rotated; hosted tests now clear the password input immediately after submitting login. Do not print raw error-context files before checking for sensitive fields, and keep hosted traces off. Learner account credentials were not used by these tests.
+
 Fixtures, mock media, automated review histories and simulated seven-day dates remain test evidence only. The pilot cannot be marked complete until an actual learner has used the system for seven days. No official score or guaranteed improvement claim follows from successful deployment or tests.
