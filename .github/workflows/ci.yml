@@ -1,0 +1,63 @@
+name: Study workbench checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Run development E2E
+        run: npm run test:e2e
+      - name: Run production offline E2E
+        run: npm run test:e2e -- tests/e2e/offline.spec.ts
+        env:
+          PLAYWRIGHT_PREVIEW: '1'
+          PLAYWRIGHT_PORT: '4174'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results/
+  cloud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.120.0
+      - run: supabase start
+      - run: node scripts/local-cloud-env.mjs
+      - run: node scripts/cloud-security.mjs
+      - run: npx playwright install --with-deps chromium
+      - name: Restore and conflict against real Auth, Database and Storage
+        run: npm run test:e2e -- tests/e2e/cloud-restore.spec.ts
+        env:
+          CLOUD_E2E: '1'
+          PLAYWRIGHT_PORT: '4187'
+      - run: npm run build
+      - name: Offline training and reconnect sync against real services
+        run: npm run test:e2e -- tests/e2e/offline.spec.ts
+        env:
+          CLOUD_E2E: '1'
+          PLAYWRIGHT_PREVIEW: '1'
+          PLAYWRIGHT_PORT: '4189'
+      - name: Stop isolated local services
+        if: always()
+        run: supabase stop --no-backup

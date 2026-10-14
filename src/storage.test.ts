@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { migrateState, parseWorkbenchState, storage } from './storage'
 
 const v1 = (overrides: Record<string, unknown> = {}) => ({
@@ -124,5 +124,31 @@ describe('storage migration and recovery', () => {
     localStorage.setItem('toefl-gre-workbench:v2', raw)
     expect(storage.load()?.attempts[0].questionReferenceStatus).toBe('pending')
     expect(restored.attempts).toHaveLength(3)
+  })
+  it('never rewrites a newer tab save while reading its previous state', () => {
+    const initial = migrateState(v1())
+    storage.save(initial)
+    const originalGet = Storage.prototype.getItem
+    let interleave = true
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (this: Storage, key) {
+      const raw = originalGet.call(this, key)
+      if (key === 'toefl-gre-workbench:v2' && interleave) {
+        interleave = false
+        storage.save({ ...initial, profile: { ...initial.profile, dailyMinutes: 90 } })
+      }
+      return raw
+    })
+    try { expect(storage.load()?.profile.dailyMinutes).toBe(45) } finally { get.mockRestore() }
+    expect(JSON.parse(localStorage.getItem('toefl-gre-workbench:v2')!).profile.dailyMinutes).toBe(90)
+  })
+
+  it('captures initial editor state and its revision from the same immutable record', () => {
+    storage.save(migrateState(v1()))
+    const raw = localStorage.getItem('toefl-gre-workbench:v2')!
+    const revision = JSON.parse(raw)._localRevision
+    const record = storage.loadRecord()
+    expect(record.state?.profile.dailyMinutes).toBe(45)
+    expect(record.revision).toBe(revision)
+    expect(localStorage.getItem('toefl-gre-workbench:v2')).toBe(raw)
   })
 })

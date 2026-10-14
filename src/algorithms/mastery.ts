@@ -22,15 +22,16 @@ export function calculateMastery(skill: Skill, attempts: Attempt[], errors: Erro
   const relevantReviews = reviews.filter((review) => skillErrors.some((error) => error.id === review.errorRecordId))
   const retryAccuracy = relevantReviews.length ? percentage(relevantReviews.filter((review) => review.correct).length, relevantReviews.length) : undefined
   const consistency = relevant.length ? Math.min(100, relevant.length * 5) : 0
-  const timeEfficiency = relevant.length ? Math.max(0, Math.min(100, 100 - ((averageTime(relevant) - 60) / 2))) : 0
+  const measuredTime = averageTime(relevant)
+  const timeEfficiency = measuredTime === undefined ? 50 : Math.max(0, Math.min(100, 100 - ((measuredTime - 60) / 2)))
   const rawScore = accuracy * MASTERY_WEIGHTS.accuracy + recentAccuracy * MASTERY_WEIGHTS.recentAccuracy + (retryAccuracy ?? accuracy) * MASTERY_WEIGHTS.retryAccuracy + consistency * MASTERY_WEIGHTS.consistency + timeEfficiency * MASTERY_WEIGHTS.timeEfficiency - weightedUnresolved * MASTERY_WEIGHTS.unresolvedPenalty
   const sampleCap = reliable.length === 0 ? 55 : reliable.length < 5 ? 78 : reliable.length <= 15 ? 90 : 100
   const score = Math.max(0, Math.min(sampleCap, Math.round(rawScore)))
-  return { skillId: skill.id, attempts: relevant.length, recentAttempts: recent.length, accuracy, recentAccuracy, retryAccuracy, averageTimeSeconds: relevant.length ? Math.round(averageTime(relevant)) : undefined, errorCount: skillErrors.length, unresolvedErrors, lastPracticedAt: relevant[0]?.date, masteryScore: score, confidence: reliable.length < 5 ? 'low' : reliable.length <= 15 ? 'medium' : 'high' }
+  return { skillId: skill.id, attempts: relevant.length, recentAttempts: recent.length, accuracy, recentAccuracy, retryAccuracy, averageTimeSeconds: measuredTime === undefined ? undefined : Math.round(measuredTime), errorCount: skillErrors.length, unresolvedErrors, lastPracticedAt: relevant[0]?.date, masteryScore: score, confidence: reliable.length < 5 ? 'low' : reliable.length <= 15 ? 'medium' : 'high' }
 }
 
 function percentage(value: number, total: number) { return total ? Math.round((value / total) * 100) : 0 }
-function averageTime(attempts: Attempt[]) { return attempts.reduce((sum, attempt) => sum + (attempt.timeSeconds ?? 0), 0) / attempts.length }
+function averageTime(attempts: Attempt[]) { const timed = attempts.filter(a => typeof a.timeSeconds === 'number' && Number.isFinite(a.timeSeconds) && a.timeSeconds >= 0); return timed.length ? timed.reduce((sum, a) => sum + a.timeSeconds!, 0) / timed.length : undefined }
 function recentWindow(attempts: Attempt[]) {
   const recent: Attempt[] = []
   for (const attempt of attempts) {
@@ -39,4 +40,3 @@ function recentWindow(attempts: Attempt[]) {
   }
   return recent
 }
-

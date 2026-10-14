@@ -31,6 +31,7 @@ describe('question reference integrity in the app', () => {
 
     expect(screen.getByRole('status').textContent).toContain('核对题库引用')
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('缺少题库记录：1 条作答'))
+    await waitFor(() => expect(onUpdate).toHaveBeenCalled())
     const reconciled = onUpdate.mock.calls.at(-1)![0] as WorkbenchState
     expect(reconciled.attempts).toEqual([{ ...state.attempts[0], questionReferenceStatus: 'orphaned' }])
     expect(reconciled.errorRecords).toEqual(state.errorRecords)
@@ -102,7 +103,7 @@ describe('question reference integrity in the app', () => {
     expect(onUpdate).not.toHaveBeenCalled()
     await userEvent.setup().click(screen.getByRole('button', { name: '重新核对题库' }))
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('缺少题库记录：1 条作答'))
-    expect((onUpdate.mock.calls.at(-1)![0] as WorkbenchState).attempts[0].questionReferenceStatus).toBe('orphaned')
+    await waitFor(() => expect((onUpdate.mock.calls.at(-1)?.[0] as WorkbenchState | undefined)?.attempts[0].questionReferenceStatus).toBe('orphaned'))
   })
 
   it('applies asynchronous reference results to the latest learning state', async () => {

@@ -1,3 +1,7 @@
+import type { MockSession } from './study/mock'
+import type { SpeakingPracticeSession } from './study/speaking'
+import type { PracticeSession } from './study/practice'
+import type { SerializedCard, VocabularyReview } from './study/vocabulary'
 export type Exam = 'toefl' | 'gre'
 export type Section = 'reading' | 'listening' | 'speaking' | 'writing' | 'vocabulary' | 'quant' | 'verbal' | 'analytical_writing'
 export type TaskStatus = 'todo' | 'in_progress' | 'done' | 'skipped'
@@ -228,6 +232,10 @@ export interface UserQuestionState {
 }
 
 export interface ErrorRecord {
+  trapType?: string
+  myReason?: string
+  correctReason?: string
+  betterStrategy?: string
   id: string
   attemptId: string
   exam: Exam
@@ -275,12 +283,15 @@ export interface ScoreCheckpoint {
   exam: Exam
   source: string
   sourceType: ScoreSourceType
-  overallScore: number
+  overallScore?: number
+  sectionOnly?: true
   sectionScores: Record<string, number>
   notes?: string
 }
 
 export interface VocabularyItem {
+  fsrs?: SerializedCard
+  deck?: string
   id: string
   word: string
   meaning: string
@@ -331,6 +342,13 @@ export interface WeeklyReview {
 }
 
 export interface WorkbenchState {
+  recommendationFeedback?: import('./study/recommendationFeedback').RecommendationFeedback[]
+  cloudAssets?: import('./cloud/assets').AssetManifest
+  questionBank?: import('./questionDatabase/indexedDbRepository').QuestionBundle
+  mockSessions?: MockSession[]
+  speakingSessions?: SpeakingPracticeSession[]
+  practiceSessions?: PracticeSession[]
+  vocabularyReviews?: VocabularyReview[]
   schemaVersion: number
   profile: UserProfile
   tasks: StudyTask[]

@@ -1,0 +1,122 @@
+import { test, expect } from '@playwright/test'
+
+test('email account sync restores learning state in a fresh browser', async ({ page, browser }) => {
+  test.setTimeout(90000)
+  test.skip(process.env.CLOUD_E2E !== '1', 'Requires the real local Supabase test stack and public environment')
+  const email = 'browser-' + Date.now() + '@example.com'
+  const password = 'Local-test-password-2026'
+  await page.goto('/')
+  await page.getByLabel('邮箱', { exact: true }).fill(email)
+  await page.getByLabel('密码', { exact: true }).fill(password)
+  await page.getByRole('button', { name: '注册邮箱账号', exact: true }).click()
+  await expect(page.getByText('已登录：' + email)).toBeVisible()
+  await page.getByRole('button', { name: '生成我的 30 天计划' }).click()
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('toefl-gre-workbench:v2'))).not.toBeNull()
+  await page.evaluate(async () => {
+    const modulePath = '/src/study/materials.ts'
+    const { MaterialStore, importMaterial } = await import(/* @vite-ignore */ modulePath)
+    const material = await importMaterial(new File(['Cross-device study notes'], 'notes.txt', { type: 'text/plain' }), 'user_owned')
+    await new MaterialStore().put(material)
+    const key = 'toefl-gre-workbench:v2'
+    let state = JSON.parse(localStorage.getItem(key)!)
+    const bankPath = '/src/questionDatabase/indexedDbRepository.ts'
+    const practicePath = '/src/study/practice.ts'
+    const vocabPath = '/src/study/vocabulary.ts'
+    const mockPath = '/src/study/mock.ts'
+    const { IndexedDbQuestionRepository } = await import(/* @vite-ignore */ bankPath)
+    const { createPracticeSession, submitPracticeSession } = await import(/* @vite-ignore */ practicePath)
+    const { createVocabularyCard, reviewVocabulary } = await import(/* @vite-ignore */ vocabPath)
+    const { recordMock } = await import(/* @vite-ignore */ mockPath)
+    const bank = new IndexedDbQuestionRepository()
+    await bank.importQuestions(Array.from({ length: 20 }, (_, i) => ({ id: 'cloud-q-' + i, sourceId: 'user-manual', exam: 'gre', examVersion: 'GRE_CURRENT', section: 'verbal', questionType: 'text_completion', skillIds: ['gre-text-completion'], prompt: 'Cloud practice ' + i, options: [{ id: 'a', text: 'Correct' }, { id: 'b', text: 'Wrong' }], answer: { optionId: 'a', verification: 'verified' }, storageMode: 'full', verification: 'verified', compatibility: { examVersion: 'GRE_CURRENT', status: 'current' }, tags: [], explanationIds: [], mediaIds: [] })))
+    const bundle = await bank.exportBundle()
+    const practice = createPracticeSession(bundle.questions.map((question: { sourceId: string }) => ({ question, source: bundle.sources.find((source: { id: string }) => source.id === question.sourceId), media: [] })), 30)
+    bundle.questions.forEach((question: { id: string }, index: number) => { practice.answers[question.id] = { optionId: index < 13 ? 'a' : 'b', verification: 'unverified' } })
+    state.practiceSessions = [practice]
+    state = submitPracticeSession(state, practice.id)
+    state.vocabulary = ['mitigate', 'lucid', 'tenacious'].map(word => createVocabularyCard(word, 'Fixture meaning'))
+    for (const card of state.vocabulary) state = reviewVocabulary(state, card.id, 3)
+    state = recordMock(state, { id: 'cloud-mock', exam: 'gre', date: new Date().toISOString().slice(0, 10), source: 'User-entered POWERPREP checkpoint fixture', kind: 'official', overall: 320, sectionScores: { verbal: 158, quant: 162 }, durationMinutes: 120, conditions: 'Timed fixture; no exam content copied', evidence: [] })
+    state.resources.push({ id: material.id, title: material.name, type: 'document', tags: ['本地材料'] })
+    const recordingPath = '/src/study/recordings.ts'
+    const { RecordingStore } = await import(/* @vite-ignore */ recordingPath)
+    // Valid PCM WAV fixture: this tests storage/playback, not a physical microphone.
+    const bytes = new ArrayBuffer(16044), view = new DataView(bytes)
+    const text = (offset: number, value: string) => [...value].forEach((letter, i) => view.setUint8(offset + i, letter.charCodeAt(0)))
+    text(0, 'RIFF'); view.setUint32(4, 16036, true); text(8, 'WAVE'); text(12, 'fmt ')
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true)
+    view.setUint32(24, 8000, true); view.setUint32(28, 16000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true)
+    text(36, 'data'); view.setUint32(40, 16000, true)
+    const blob = new Blob([bytes], { type: 'audio/wav' })
+    const session = { id: crypto.randomUUID(), recordingId: crypto.randomUUID(), taskType: 'interview', prompt: 'Describe your study routine', startedAt: new Date().toISOString(), durationSeconds: 1, preparationSeconds: 0, responseSeconds: 1, mimeType: blob.type, byteLength: blob.size, errors: [], note: '' }
+    await new RecordingStore().put({ id: session.recordingId, session, blob })
+    state.speakingSessions = [session]
+    state._localRevision++
+    localStorage.setItem(key, JSON.stringify(state))
+  })
+  await page.reload()
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  await page.getByRole('button', { name: '立即同步' }).click()
+  await expect(page.getByRole('status')).toContainText('已同步')
+  const expected = await page.evaluate(() => JSON.parse(localStorage.getItem('toefl-gre-workbench:v2')!))
+  const context = await browser.newContext()
+  try {
+    const fresh = await context.newPage()
+    await fresh.goto('/')
+    await fresh.getByLabel('邮箱', { exact: true }).fill(email)
+    await fresh.getByLabel('密码', { exact: true }).fill(password)
+    await fresh.getByRole('button', { name: '登录', exact: true }).click()
+    await expect(fresh.getByText('已登录：' + email)).toBeVisible()
+    await fresh.getByRole('button', { name: '预览云端备份' }).click()
+    await fresh.getByRole('button', { name: '确认使用云端备份' }).click()
+    await expect(fresh.getByRole('heading', { level: 1, name: "Today's Prescription" })).toBeVisible()
+    const actual = await fresh.evaluate(() => JSON.parse(localStorage.getItem('toefl-gre-workbench:v2')!))
+    expect(actual.profile).toEqual(expected.profile)
+    expect(actual.tasks).toEqual(expected.tasks)
+    expect(actual.attempts.filter((row: { sessionId?: string }) => row.sessionId === expected.practiceSessions[0].id)).toHaveLength(20)
+    expect(actual.errorRecords).toHaveLength(7)
+    for (const field of ['errorRecords', 'vocabulary', 'vocabularyReviews', 'mockSessions', 'checkpoints', 'userQuestionStates', 'practiceSessions', 'weeklyReviews']) expect(actual[field]).toEqual(expected[field])
+    expect(actual.questionBank.questions).toHaveLength(20)
+    await fresh.getByRole('button', { name: '资料库', exact: true }).click()
+    await fresh.getByText('阅读文本', { exact: true }).click()
+    await expect(fresh.getByText('Cross-device study notes', { exact: true })).toBeVisible()
+    await fresh.getByRole('button', { name: '口语训练', exact: true }).click()
+    const audio = fresh.getByLabel('复听录音', { exact: true })
+    await expect(audio).toBeVisible()
+    await expect.poll(() => audio.evaluate(element => (element as HTMLAudioElement).readyState)).toBeGreaterThan(0)
+    // A failed cloud upload must leave downloaded local audio playable.
+    await fresh.route('**/storage/v1/object/**', route => route.abort('failed'))
+    await fresh.getByRole('button', { name: '设置', exact: true }).click()
+    await fresh.getByRole('button', { name: '立即同步' }).click()
+    await expect(fresh.getByRole('status')).toContainText('云端操作未完成')
+    await fresh.getByRole('button', { name: '口语训练', exact: true }).click()
+    await fresh.getByLabel('复听录音').evaluate(async element => { await (element as HTMLAudioElement).play() })
+    await expect.poll(() => fresh.getByLabel('复听录音').evaluate(element => (element as HTMLAudioElement).currentTime)).toBeGreaterThan(0)
+    await fresh.unroute('**/storage/v1/object/**')
+    // Simulate an expired-auth server response, then continue local study.
+    await fresh.route('**/auth/v1/user', route => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ code: 'bad_jwt', message: 'JWT expired' }) }))
+    await fresh.getByRole('button', { name: '设置', exact: true }).click()
+    await fresh.getByLabel('每天可用时间').fill('70')
+    await fresh.getByRole('button', { name: '保存设置', exact: true }).click()
+    await expect.poll(() => fresh.evaluate(() => JSON.parse(localStorage.getItem('toefl-gre-workbench:v2')!).profile.dailyMinutes)).toBe(70)
+    await fresh.getByRole('button', { name: '立即同步' }).click()
+    await expect(fresh.getByRole('status')).toContainText('云端操作未完成')
+    expect(await fresh.evaluate(() => JSON.parse(localStorage.getItem('toefl-gre-workbench:v2')!).errorRecords.length)).toBe(7)
+    await fresh.unroute('**/auth/v1/user')
+    // Both devices now share the same remote base. B uploads first, A must conflict.
+    await fresh.getByRole('button', { name: '设置', exact: true }).click()
+    await fresh.getByLabel('每天可用时间').fill('75')
+    await fresh.getByRole('button', { name: '保存设置', exact: true }).click()
+    await expect.poll(() => fresh.evaluate(() => JSON.parse(localStorage.getItem('toefl-gre-workbench:v2')!).profile.dailyMinutes)).toBe(75)
+    await fresh.getByRole('button', { name: '立即同步' }).click()
+    await expect(fresh.getByRole('status')).toContainText('已同步')
+    await page.getByLabel('每天可用时间').fill('90')
+    await page.getByRole('button', { name: '保存设置', exact: true }).click()
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('toefl-gre-workbench:v2')!).profile.dailyMinutes)).toBe(90)
+    await page.getByRole('button', { name: '立即同步' }).click()
+    await expect(page.getByRole('alert')).toContainText('同步冲突')
+    await page.getByRole('button', { name: '使用云端：先预览' }).click()
+    await page.getByRole('button', { name: '确认使用云端备份' }).click()
+    await expect(page.getByLabel('每天可用时间')).toHaveValue('75')
+  } finally { await context.close() }
+})

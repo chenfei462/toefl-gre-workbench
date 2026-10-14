@@ -28,8 +28,10 @@ export interface RollingWindow {
 
 export function calculateScoreTrajectory(exam: Exam, checkpoints: ScoreCheckpoint[], profile: ExamProfile): ScoreTrajectory {
   const ordered = checkpoints.filter(checkpoint => checkpoint.exam === exam).sort((a, b) => a.date.localeCompare(b.date))
-  const baseline = ordered[0]
-  const latest = ordered.at(-1)
+  const scored = checkpoints.filter(c => c.exam === exam && typeof c.overallScore === 'number' && Number.isFinite(c.overallScore) && !c.sectionOnly)
+  const baseline = scored.slice().sort((a, b) => a.date.localeCompare(b.date))[0]
+  // State stores newest records first; preserve that order for same-day scores.
+  const latest = scored.slice().sort((a, b) => b.date.localeCompare(a.date))[0]
   const baselineScore = baseline?.overallScore ?? profile.baselineScore
   const latestScore = latest?.overallScore ?? profile.latestScore ?? profile.baselineScore
   const delta = baselineScore !== undefined && latestScore !== undefined ? latestScore - baselineScore : undefined

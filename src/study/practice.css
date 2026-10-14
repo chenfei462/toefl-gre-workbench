@@ -1,0 +1,16 @@
+.practice-player { max-width: 1100px; margin-inline: auto; }
+.practice-player:fullscreen { overflow: auto; padding: 2rem; background: var(--bg, #f4f5f0); }
+.practice-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: 1rem; }
+.practice-toolbar h1 { margin-right: auto; }
+.practice-toolbar input { max-width: 6rem; }
+.practice-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 2rem; }
+.practice-passage { white-space: pre-wrap; line-height: 1.8; }
+.practice-option, .practice-picker > label { display: flex; align-items: start; gap: .8rem; padding: .8rem; border-bottom: 1px solid #d8ddd4; }
+.practice-picker { max-height: 26rem; overflow: auto; margin-block: 1rem; }
+.practice-picker small { display: block; opacity: .75; }
+.practice-player progress, .practice-player textarea { width: 100%; }
+.practice-player textarea { min-height: 8rem; }
+.practice-player audio { max-width: 100%; }
+.practice-player fieldset { border: 1px solid #c4cebd; border-radius: 8px; }
+.practice-confirm { position: fixed; z-index: 100; inset: 25% max(1rem, calc((100vw - 34rem)/2)) auto; padding: 2rem; border: 2px solid #52684e; border-radius: 12px; background: #fff; box-shadow: 0 0 0 100vmax #0008; }
+.practice-confirm button { margin: .5rem; }
