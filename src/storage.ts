@@ -1,3 +1,11 @@
+import { clearWithRevision, isResetMarker, saveWithRevision } from './cloud/revision'
+import { recommendationFeedbackSchema } from './study/recommendationFeedback'
+import { parseCloudQuestionBundle } from './questionDatabase/bundle'
+import { assetManifestSchema } from './cloud/assets'
+import { mockSessionSchema } from './study/mock'
+import { speakingSessionSchema } from './study/speakingSchema'
+import { practiceSessionSchema } from './study/practiceSchema'
+import { vocabularyReviewSchema, vocabularyItemSchema } from './study/vocabulary'
 import { z } from 'zod'
 import { answerSchema } from './questionDatabase/schema'
 import { markQuestionReferencesPending } from './questionDatabase/repository'
@@ -7,10 +15,10 @@ const examSchema = z.enum(['toefl', 'gre'])
 const sourceTypeSchema = z.enum(['official', 'third_party', 'self_created', 'mock'])
 const errorTypeSchema = z.enum(['vocabulary', 'knowledge', 'concept', 'grammar', 'logic', 'misread', 'calculation', 'strategy', 'time_pressure', 'careless', 'pronunciation', 'fluency', 'listening_detail', 'memory', 'unknown'])
 const attemptSchema = z.object({ id: z.string(), date: z.string(), exam: examSchema, section: z.string(), questionType: z.string().optional(), skillIds: z.array(z.string()), source: z.string().optional(), sourceType: sourceTypeSchema, correct: z.boolean().optional(), rawScore: z.number().optional(), timeSeconds: z.number().optional(), difficulty: z.number().int().min(1).max(5).optional(), confidence: z.number().int().min(1).max(5).optional(), errorType: errorTypeSchema.optional(), note: z.string().optional(), reviewed: z.boolean(), taskId: z.string().optional(), questionId: z.string().optional(), questionReferenceStatus: z.enum(['pending', 'valid', 'orphaned']).optional(), sessionId: z.string().optional(), sourceReference: z.object({ sourceId: z.string(), sourceQuestionId: z.string().optional(), locator: z.string().optional(), accessedAt: z.string().optional() }).optional(), selectedAnswer: answerSchema.optional(), evidenceWeight: z.number().min(0).max(1).optional(), excludeFromMastery: z.boolean().optional(), provenance: z.enum(['question', 'reference', 'batch_summary']).optional(), constructedResponse: z.object({ response: z.string().optional(), feedback: z.string().optional(), rubricScore: z.number().optional() }).optional() })
-const errorRecordSchema = z.object({ id: z.string(), attemptId: z.string(), exam: examSchema, section: z.string(), questionType: z.string().optional(), skillIds: z.array(z.string()), errorType: errorTypeSchema, explanation: z.string().optional(), correctedUnderstanding: z.string().optional(), createdAt: z.string(), status: z.enum(['new', 'reviewing', 'resolved', 'reopened']), reviewCount: z.number().int().nonnegative(), nextReviewDate: z.string().optional(), resolvedAt: z.string().optional() })
+const errorRecordSchema = z.object({ trapType: z.string().optional(), myReason: z.string().optional(), correctReason: z.string().optional(), betterStrategy: z.string().optional(), id: z.string(), attemptId: z.string(), exam: examSchema, section: z.string(), questionType: z.string().optional(), skillIds: z.array(z.string()), errorType: errorTypeSchema, explanation: z.string().optional(), correctedUnderstanding: z.string().optional(), createdAt: z.string(), status: z.enum(['new', 'reviewing', 'resolved', 'reopened']), reviewCount: z.number().int().nonnegative(), nextReviewDate: z.string().optional(), resolvedAt: z.string().optional() })
 
 const userQuestionStateSchema = z.object({ questionId: z.string(), timesSeen: z.number().int().nonnegative(), lastResult: z.enum(['correct', 'incorrect', 'ungraded']).optional(), lastAttemptDate: z.string().optional(), personalDifficulty: z.number().int().min(1).max(5).optional(), bookmarked: z.boolean() })
-const v2Schema = z.object({ schemaVersion: z.literal(2), profile: z.record(z.string(), z.unknown()), examProfiles: z.object({ toefl: z.record(z.string(), z.unknown()), gre: z.record(z.string(), z.unknown()) }), tasks: z.array(z.record(z.string(), z.unknown())), resources: z.array(z.record(z.string(), z.unknown())), practiceEntries: z.array(z.record(z.string(), z.unknown())), weeklyReviews: z.array(z.record(z.string(), z.unknown())), skills: z.array(z.record(z.string(), z.unknown())), attempts: z.array(attemptSchema), errorRecords: z.array(errorRecordSchema), reviewAttempts: z.array(z.record(z.string(), z.unknown())), mastery: z.array(z.record(z.string(), z.unknown())), checkpoints: z.array(z.record(z.string(), z.unknown())), vocabulary: z.array(z.record(z.string(), z.unknown())), prescriptions: z.array(z.record(z.string(), z.unknown())), legacyPracticeEntries: z.array(z.record(z.string(), z.unknown())), userQuestionStates: z.array(userQuestionStateSchema).default([]), migrationWarnings: z.array(z.string()).optional() })
+const v2Schema = z.object({ schemaVersion: z.literal(2), mockSessions: z.array(mockSessionSchema).default([]), speakingSessions: z.array(speakingSessionSchema).default([]), practiceSessions: z.array(practiceSessionSchema).default([]), vocabularyReviews: z.array(vocabularyReviewSchema).default([]), profile: z.record(z.string(), z.unknown()), examProfiles: z.object({ toefl: z.record(z.string(), z.unknown()), gre: z.record(z.string(), z.unknown()) }), tasks: z.array(z.record(z.string(), z.unknown())), resources: z.array(z.record(z.string(), z.unknown())), practiceEntries: z.array(z.record(z.string(), z.unknown())), weeklyReviews: z.array(z.record(z.string(), z.unknown())), skills: z.array(z.record(z.string(), z.unknown())), attempts: z.array(attemptSchema), errorRecords: z.array(errorRecordSchema), reviewAttempts: z.array(z.record(z.string(), z.unknown())), mastery: z.array(z.record(z.string(), z.unknown())), checkpoints: z.array(z.record(z.string(), z.unknown())), vocabulary: z.array(vocabularyItemSchema), prescriptions: z.array(z.record(z.string(), z.unknown())), legacyPracticeEntries: z.array(z.record(z.string(), z.unknown())), userQuestionStates: z.array(userQuestionStateSchema).default([]), migrationWarnings: z.array(z.string()).optional() })
 
 export const defaultSkills = [
   { id: 'gre-vocabulary', exam: 'gre' as const, section: 'verbal', name: 'Vocabulary', priorityWeight: 1 }, { id: 'gre-logic', exam: 'gre' as const, section: 'verbal', name: 'Contrast / Inference Logic', priorityWeight: 1 }, { id: 'toefl-vocabulary', exam: 'toefl' as const, section: 'reading', name: 'Vocabulary in Context', priorityWeight: 1 }, { id: 'toefl-logic', exam: 'toefl' as const, section: 'reading', name: 'Reading Logic', priorityWeight: 1 }, { id: 'gre-issue', exam: 'gre' as const, section: 'analytical_writing', questionType: 'analyze_issue', name: 'Analyze an Issue', priorityWeight: 1 },
@@ -31,7 +39,7 @@ export function migrateState(input: unknown): WorkbenchState {
   const profile = normalizeProfile(raw.profile, warnings); const practiceEntries = normalizePracticeEntries(raw.practiceEntries, warnings); const tasks = normalizeTasks(raw.tasks, warnings)
   const legacyToefl = [profile.currentScores.toefl, profile.targetScores.toefl].map(value => Number(value)).find(value => Number.isFinite(value) && value > 6 && value <= 120)
   if (legacyToefl !== undefined) warnings.push(`legacy TOEFL score ${legacyToefl} retained in profile text; not converted to official 1-6 score`)
-  return { schemaVersion: 2, profile, examProfiles: createExamProfiles(profile as unknown as Record<string, unknown>), tasks, resources: objectArray(raw.resources, 'resources', warnings) as unknown as WorkbenchState['resources'], practiceEntries, weeklyReviews: objectArray(raw.weeklyReviews, 'weeklyReviews', warnings) as unknown as WorkbenchState['weeklyReviews'], skills: defaultSkills, attempts: [], errorRecords: [], reviewAttempts: [], mastery: [], checkpoints: [], vocabulary: [], prescriptions: [], legacyPracticeEntries: practiceEntries.map((entry) => ({ ...entry })), userQuestionStates: [], migrationWarnings: warnings.length ? warnings : undefined }
+  return { schemaVersion: 2, recommendationFeedback: [], practiceSessions: [], speakingSessions: [], mockSessions: [], vocabularyReviews: [], profile, examProfiles: createExamProfiles(profile as unknown as Record<string, unknown>), tasks, resources: objectArray(raw.resources, 'resources', warnings) as unknown as WorkbenchState['resources'], practiceEntries, weeklyReviews: objectArray(raw.weeklyReviews, 'weeklyReviews', warnings) as unknown as WorkbenchState['weeklyReviews'], skills: defaultSkills, attempts: [], errorRecords: [], reviewAttempts: [], mastery: [], checkpoints: [], vocabulary: [], prescriptions: [], legacyPracticeEntries: practiceEntries.map((entry) => ({ ...entry })), userQuestionStates: [], migrationWarnings: warnings.length ? warnings : undefined }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value) }
@@ -49,6 +57,9 @@ function normalizeTasks(value: unknown, warnings: string[]): StudyTask[] { retur
 
 export function parseWorkbenchState(input: unknown): WorkbenchState {
   const parsed = v2Schema.parse(input) as unknown as WorkbenchState
+  parsed.recommendationFeedback = z.array(recommendationFeedbackSchema).parse(isRecord(input) ? input.recommendationFeedback ?? [] : [])
+  if (isRecord(input) && input.questionBank !== undefined) parsed.questionBank = parseCloudQuestionBundle(input.questionBank)
+  if (isRecord(input) && input.cloudAssets !== undefined) parsed.cloudAssets = assetManifestSchema.parse(input.cloudAssets)
   parsed.skills = [...parsed.skills, ...defaultSkills.filter(s => !parsed.skills.some(x => x.id === s.id))]; const toefl = parsed.examProfiles.toefl
   if (toefl.targetScore > 6 || (toefl.baselineScore !== undefined && toefl.baselineScore > 6)) {
     parsed.migrationWarnings = [...(parsed.migrationWarnings ?? []), `legacy TOEFL score retained in original profile data; not converted to official 1-6 score (target=${toefl.targetScore}, baseline=${toefl.baselineScore ?? 'unset'})`]
@@ -70,24 +81,26 @@ function preserveRecovery(rawPayload: string, reason: string) {
 }
 
 export const storage = {
-  load(): WorkbenchState | null {
+  load(): WorkbenchState | null { return this.loadRecord().state },
+  loadRecord(): { state: WorkbenchState | null; revision: number } {
     const raw = localStorage.getItem(KEY) ?? localStorage.getItem('toefl-gre-workbench:v1')
-    if (!raw) return null
+    if (!raw) return { state: null, revision: 0 }
+    let revision = 0
     try {
-      const migrated = prepareQuestionReferenceCheck(migrateState(JSON.parse(raw)))
-      localStorage.setItem(KEY, JSON.stringify(migrated))
+      const input = JSON.parse(raw)
+      if (isRecord(input) && typeof input._localRevision === 'number' && Number.isSafeInteger(input._localRevision) && input._localRevision >= 0) revision = input._localRevision
+      if (isResetMarker(input)) return { state: null, revision }
+      const migrated = prepareQuestionReferenceCheck(migrateState(input))
       if (migrated.migrationWarnings?.length) preserveRecovery(raw, migrated.migrationWarnings.join('; '))
-      return migrated
+      return { state: migrated, revision }
     } catch (error) {
       preserveRecovery(raw, `invalid stored workbench payload: ${error instanceof Error ? error.message : 'parse failed'}`)
-      return null
+      return { state: null, revision }
     }
   },
   getRecovery() { if (lastRecovery) return lastRecovery; const raw = localStorage.getItem(RECOVERY_KEY); return raw ? { rawPayload: raw, reason: 'stored workbench payload preserved for recovery', recoveredAt: '' } : null },
-  save(state: WorkbenchState) { localStorage.setItem(KEY, JSON.stringify(state)) },
-  clear() { localStorage.removeItem(KEY); localStorage.removeItem('toefl-gre-workbench:v1'); localStorage.removeItem(RECOVERY_KEY); lastRecovery = null },
+  save(state: WorkbenchState) { saveWithRevision(state) },
+  clear(expectedRevision?: number) { const revision = clearWithRevision(expectedRevision); localStorage.removeItem('toefl-gre-workbench:v1'); localStorage.removeItem(RECOVERY_KEY); lastRecovery = null; return revision },
   export(state: WorkbenchState) { return JSON.stringify(state, null, 2) },
   import(raw: string) { return prepareQuestionReferenceCheck(migrateState(JSON.parse(raw))) },
 }
-
-

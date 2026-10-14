@@ -24,3 +24,11 @@ describe('mastery recent-date grouping', () => {
     expect(priority(permuted, permutedMastery)).toEqual(priority(attempts, mastery))
   })
 })
+
+it('does not infer maximum speed from attempts with no measured time', () => {
+ const missing = Array.from({ length: 30 }, (_, i) => attempt(String(i), '2026-10-14', true))
+ const measured = missing.map(a => ({ ...a, timeSeconds: 60 }))
+ expect(calculateMastery(skill, missing, [], []).averageTimeSeconds).toBeUndefined()
+ expect(calculateMastery(skill, missing, [], []).masteryScore).toBeLessThan(calculateMastery(skill, measured, [], []).masteryScore)
+ expect(calculateMastery(skill, [...missing, { ...measured[0], id: 'timed', timeSeconds: 120 }], [], []).averageTimeSeconds).toBe(120)
+})

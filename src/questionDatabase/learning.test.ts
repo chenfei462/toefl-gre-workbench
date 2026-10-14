@@ -9,6 +9,12 @@ const state = () => migrateState({ schemaVersion: 1, profile: { examTypes: ['gre
 const source: QuestionSource = { id: 'pp', name: 'POWERPREP 2', publisher: 'ETS', sourceType: 'official', sourceTier: 'A', rightsStatus: 'reference_only', examVersions: ['GRE_CURRENT'], verified: true }
 const q: Question = { id: 'q', sourceId: 'pp', sourceQuestionId: '7', exam: 'gre', examVersion: 'GRE_CURRENT', section: 'verbal', questionType: 'text_completion', skillIds: ['gre-text-completion'], options: [], answer: { text: 'B', verification: 'official' }, storageMode: 'reference_only', verification: 'verified', compatibility: { examVersion: 'GRE_CURRENT', status: 'current' }, promptHash: '', explanationIds: [], mediaIds: [], tags: [], active: true, createdAt: '', updatedAt: '' }
 describe('question learning loop', () => {
+  it('preserves analysis and retry progress when supplementing a wrong attempt', () => {
+    const before = recordQuestionAttempt(state(), q, source, { date: '2026-10-11', correct: false })
+    before.errorRecords[0] = { ...before.errorRecords[0], trapType: 'too_broad', myReason: 'scope', reviewCount: 3, status: 'reopened', nextReviewDate: '2026-10-20' }
+    const next = recordQuestionAttempt(before, q, source, { date: '2026-10-11', correct: false, replaceAttemptId: before.attempts[0].id })
+    expect(next.errorRecords[0]).toMatchObject({ trapType: 'too_broad', myReason: 'scope', reviewCount: 3, status: 'reopened', nextReviewDate: '2026-10-20' })
+  })
   it('preserves question provenance and selected answers through export/reload', () => {
     const next = recordQuestionAttempt(state(), q, source, { date: '2026-10-11', correct: false, selectedAnswer: { text: 'D', verification: 'unverified' }, errorType: 'vocabulary', timeSeconds: 94 })
     const restored = storage.import(storage.export(next))
